@@ -1,0 +1,85 @@
+version: 2
+
+models:
+  - name: stg_ctgov__studies
+    description: >
+      Cleaned, deduplicated, and classified view of ClinicalTrials.gov studies.
+      One row per NCT ID representing the latest known state.
+      Source: raw_ctgov__studies (CT.gov v2 API, Phase 2 & 3 interventional trials, first submitted >= 2015-01-01).
+    columns:
+      - name: nct_id
+        description: Unique NCT identifier assigned by ClinicalTrials.gov.
+        tests:
+          - not_null
+          - unique
+
+      - name: overall_status
+        description: >
+          Current overall status of the trial as reported by CT.gov.
+          Possible values: COMPLETED, TERMINATED, WITHDRAWN, SUSPENDED,
+          RECRUITING, ACTIVE_NOT_RECRUITING, NOT_YET_RECRUITING,
+          ENROLLING_BY_INVITATION, UNKNOWN.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - COMPLETED
+                - TERMINATED
+                - WITHDRAWN
+                - SUSPENDED
+                - RECRUITING
+                - ACTIVE_NOT_RECRUITING
+                - NOT_YET_RECRUITING
+                - ENROLLING_BY_INVITATION
+                - UNKNOWN
+
+      - name: sponsor_class
+        description: >
+          Classification of the lead sponsor.
+          Values: INDUSTRY, NIH, OTHER_GOV, INDIVIDUAL, NETWORK, OTHER, UNKNOWN.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - INDUSTRY
+                - NIH
+                - OTHER_GOV
+                - INDIVIDUAL
+                - NETWORK
+                - OTHER
+                - UNKNOWN
+
+      - name: is_early_stop
+        description: >
+          TRUE if the trial ended early (status is TERMINATED, WITHDRAWN, or SUSPENDED).
+          FALSE otherwise. NULL never expected.
+        tests:
+          - not_null
+
+      - name: is_closed
+        description: >
+          TRUE if the trial is no longer actively running
+          (COMPLETED + all early-stop statuses). Used as the denominator
+          in early-stop proportion calculations.
+        tests:
+          - not_null
+
+      - name: why_stopped
+        description: >
+          Free-text explanation of why the trial was stopped early.
+          Only populated when overall_status is TERMINATED, WITHDRAWN, or SUSPENDED.
+          NULL is expected for non-stopped trials.
+
+      - name: last_updated_run_ts
+        description: Pipeline run timestamp (UTC) that produced this row's data.
+        tests:
+          - not_null
+
+      - name: start_date
+        description: Trial start date. May be NULL if CT.gov source only provides month/year.
+
+      - name: completion_date
+        description: Trial completion date. May be NULL for ongoing or month-only dates.
+
+      - name: first_submitted_date
+        description: Date the trial was first submitted to ClinicalTrials.gov.
