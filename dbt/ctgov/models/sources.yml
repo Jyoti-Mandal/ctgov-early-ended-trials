@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: landing
+    description: >
+      Raw landing zone for ClinicalTrials.gov data.
+      Tables are populated by the Python ingestion pipeline (ctgov_ingestion)
+      via Databricks Auto Loader. One row per study per pipeline run —
+      deduplication is handled in the staging layer.
+    catalog: ctgov
+    schema: landing
+    tables:
+      - name: raw_ctgov__studies
+        description: >
+          Raw CT.gov study JSON, one row per study per ingestion run.
+          The raw_json column holds the full protocolSection JSON as returned
+          by the ClinicalTrials.gov v2 API.
+        columns:
+          - name: nct_id
+            description: NCT identifier, extracted at ingestion time for indexing.
+          - name: raw_json
+            description: Full study JSON string from CT.gov v2 API.
+          - name: run_ts
+            description: UTC timestamp of the pipeline run that produced this row.
+          - name: run_date
+            description: Date portion of run_ts (YYYY-MM-DD).
+          - name: _ingested_at
+            description: Timestamp the row was physically written to Delta.
