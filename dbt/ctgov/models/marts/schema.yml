@@ -1,1 +1,92 @@
+version: 2
 
+models:
+  - name: mart_sponsor_early_stop
+    description: >
+      Aggregated early-stop analysis by sponsor class.
+      Answers: which sponsor class has the highest proportion of trials that
+      ended early (TERMINATED, WITHDRAWN, SUSPENDED), and how does each
+      compare to industry-sponsored trials?
+      Denominator is closed trials only (completed + early-stop).
+    columns:
+      - name: sponsor_class
+        description: Lead sponsor classification from ClinicalTrials.gov.
+        tests:
+          - not_null
+          - unique
+
+      - name: total_closed_trials
+        description: Total number of closed trials (completed + early-stop) for this sponsor class.
+        tests:
+          - not_null
+
+      - name: early_stop_trials
+        description: Number of trials that ended early (TERMINATED, WITHDRAWN, or SUSPENDED).
+        tests:
+          - not_null
+
+      - name: completed_trials
+        description: Number of trials that reached natural completion (COMPLETED status).
+        tests:
+          - not_null
+
+      - name: early_stop_rate
+        description: >
+          Proportion of closed trials that ended early.
+          Calculated as early_stop_trials / total_closed_trials.
+          Range: 0.0 (none ended early) to 1.0 (all ended early).
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+
+      - name: industry_early_stop_rate
+        description: >
+          The early_stop_rate for the INDUSTRY sponsor class, broadcast to every row.
+          Used as the benchmark for cross-class comparison.
+        tests:
+          - not_null
+
+      - name: vs_industry_delta
+        description: >
+          Difference between this sponsor class's early_stop_rate and the INDUSTRY rate.
+          Positive = higher early-stop rate than industry (worse).
+          Negative = lower early-stop rate than industry (better).
+
+      - name: early_stop_rank
+        description: >
+          Rank of this sponsor class by early_stop_rate (1 = highest proportion of early stops).
+          Ties receive the same rank.
+        tests:
+          - not_null
+
+  - name: mart_studies_classified
+    description: >
+      Study-level detail for all closed trials (completed + early-stop).
+      Use to drill into individual trials behind mart_sponsor_early_stop aggregates.
+      Grain: one row per NCT ID.
+    columns:
+      - name: nct_id
+        description: Unique NCT identifier.
+        tests:
+          - not_null
+          - unique
+
+      - name: sponsor_class
+        description: Lead sponsor classification.
+        tests:
+          - not_null
+
+      - name: is_early_stop
+        description: TRUE if trial ended early (TERMINATED, WITHDRAWN, or SUSPENDED).
+        tests:
+          - not_null
+
+      - name: overall_status
+        description: Final overall status of the trial.
+        tests:
+          - not_null
+
+      - name: why_stopped
+        description: Investigator-provided reason for early termination. NULL for completed trials.
