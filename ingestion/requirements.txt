@@ -1,0 +1,15 @@
+# CT.gov ingestion pipeline dependencies
+# Install on Databricks Job cluster or via %pip in a notebook
+
+# HTTP client
+requests>=2.31.0
+
+# Azure ADLS Gen2 SDK
+azure-storage-file-datalake>=12.14.0
+azure-identity>=1.15.0
+
+# Retry utilities (used by requests HTTPAdapter)
+urllib3>=1.26.0
+
+# PySpark is provided by Databricks runtime — do not pin here
+# pyspark is intentionally excluded
