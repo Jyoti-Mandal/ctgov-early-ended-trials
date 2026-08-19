@@ -1,0 +1,37 @@
+name: ctgov
+version: "1.0.0"
+config-version: 2
+
+profile: ctgov_databricks
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+# Persist model and column descriptions to Unity Catalog
+models:
+  ctgov:
+    +persist_docs:
+      relation: true
+      columns: true
+
+    staging:
+      +schema: staging
+      +materialized: view         # staging as views — cheap, always fresh
+      +tags: ["staging"]
+
+    marts:
+      +schema: marts
+      +materialized: table        # marts as tables — pre-computed for consumers
+      +tags: ["marts"]
+
+# Unity Catalog: use 3-level namespace ctgov.<schema>.<model>
+dispatch:
+  - macro_namespace: dbt
+    search_order: ["ctgov", "dbt"]

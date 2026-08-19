@@ -1,0 +1,23 @@
+# Copy this file to ~/.dbt/profiles.yml and fill in your workspace values.
+# Do NOT commit the real profiles.yml — it contains credentials.
+
+ctgov_databricks:
+  target: dev
+  outputs:
+    dev:
+      type: databricks
+      catalog: ctgov                              # Unity Catalog catalog name
+      schema: staging                             # default schema; overridden per model
+      host: "<workspace>.azuredatabricks.net"     # workspace URL (no https://)
+      http_path: "/sql/1.0/warehouses/<id>"       # SQL Warehouse HTTP path
+      token: "{{ env_var('DATABRICKS_TOKEN') }}"  # PAT from env var
+      threads: 4
+
+    prod:
+      type: databricks
+      catalog: ctgov
+      schema: staging
+      host: "<prod-workspace>.azuredatabricks.net"
+      http_path: "/sql/1.0/warehouses/<prod-id>"
+      token: "{{ env_var('DATABRICKS_TOKEN') }}"
+      threads: 8
